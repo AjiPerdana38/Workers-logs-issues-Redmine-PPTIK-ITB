@@ -1,4 +1,6 @@
 import amqp from 'amqplib'
+import connect from './database/index.js'
+import LogIssues from './models/logIssues.js'
 import { notification } from './utils/notifications.js'
 import dotenv from 'dotenv'
 dotenv.config()
@@ -11,17 +13,29 @@ const connected = async () => {
 
   channel.assertQueue(queue, { durable: true })
 
-  channel.consume(queue, message => {
-    const data = message.content.toString()
+  channel.consume(queue, messages => {
+    const data = messages.content.toString()
     const responseJson = JSON.parse(data)
-    const payload = JSON.parse(responseJson.payload)
+
+    const { issuesId, issuesName, username: member, phoneNumber: memberPhoneNumber, message, timestamp: date } = responseJson
 
     console.log(responseJson)
-    console.log(payload)
-    // channel.ack(message)
+    channel.ack(messages)
+
+    const logIssues = new LogIssues({
+      issuesId,
+      issuesName,
+      member,
+      memberPhoneNumber,
+      message,
+      date
+    })
 
     try {
-      notification(responseJson.phoneNumber, 'Redmine', payload.message)
+      logIssues.save()
+      console.log('Data Telah Masuk Ke database')
+
+      notification(responseJson.phoneNumber, 'Redmine', message)
       console.log('Notifikasi telah berhasil masuk')
     } catch (error) {
       console.log(error.message)
@@ -30,3 +44,4 @@ const connected = async () => {
 }
 
 connected()
+connect()
