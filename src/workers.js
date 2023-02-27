@@ -35,7 +35,7 @@ const connected = async () => {
       logIssues.save()
       console.log('Data Telah Masuk Ke database')
 
-      notification(responseJson.phoneNumber, 'Redmine', message)
+      notification(memberPhoneNumber, 'Redmine', message)
       console.log('Notifikasi telah berhasil masuk')
     } catch (error) {
       console.log(error.message)
